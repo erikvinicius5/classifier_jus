@@ -3,6 +3,8 @@ from time import sleep
 from threading import Semaphore
 from bs4 import BeautifulSoup
 
+import urllib
+
 category_links = {
 	"Direito militar": "http://www.jusbrasil.com.br/topicos/292125/direito-militar/artigos",
 	"Direito do trabalho": "http://www.jusbrasil.com.br/topicos/355654/direito-do-trabalho/artigos",
@@ -29,7 +31,7 @@ class Crawler:
 	def __init__(self, base_links):
 		self.base_links = base_links
 		self.links = {}
-		self.browser = Browser()
+		#self.browser = Browser()
 		self.semaphore = Semaphore()
 
 	def expand_page(self, page):
@@ -51,12 +53,25 @@ class Crawler:
 
 		return to_return
 
-	def get_articles(self):
+	def parse_articles(self, links):
 		pass
 
+	def write_article(self, category, url):
+		raw_page = urllib.urlopen(url).read()
+		article = self.get_article_from_page(raw_page)
+		article_id = url.split("/")[2]
+		
+
 	def get_article_from_page(self, page):
+		to_return = ""
+
 		soup = BeautifulSoup(page)
-		pass
+		to_return += soup.header.find_all("h1")[0].get_text()
+		to_return += soup.header.find_all("h2")[0].get_text()
+		soup.article.div.extract()
+		to_return += soup.article.get_text()
+
+		return to_return
 
 	def set_links(self, category, links):
 		self.semaphore.acquire()
@@ -82,7 +97,8 @@ class Crawler:
 		
 
 crawler = Crawler(category_links)
-crawler.run()
+#crawler.run()
+crawler.get_article_from_page(urllib.urlopen("http://joaovcastello.jusbrasil.com.br/artigos/133227251/breves-consideracoes-informativas-e-juridicas-do-seguro-dpvat?ref=home").read())
 
 #browser = Browser()
 #browser.visit("http://www.jusbrasil.com.br/topicos/292125/direito-militar/noticias")
