@@ -1,46 +1,93 @@
 from splinter import Browser
+from time import sleep
+from threading import Semaphore
+from bs4 import BeautifulSoup
 
 category_links = {
-	"Direito militar", "http://www.jusbrasil.com.br/topicos/292125/direito-militar"
-	"Direito do trabalho", "http://www.jusbrasil.com.br/topicos/355654/direito-do-trabalho"
-	"Direito agrario", "http://www.jusbrasil.com.br/topicos/26413195/direito-agrario"
-	"Direito civil", "http://www.jusbrasil.com.br/topicos/26413196/direito-ambiental"
-	"Direito constitucional", "http://www.jusbrasil.com.br/topicos/26413200/direito-civil"
-	"Direito de energia", "http://www.jusbrasil.com.br/topicos/26413203/direito-constitucional"
-	"Direito ", "http://www.jusbrasil.com.br/topicos/26413204/direito-de-energia"
-	"Direito ", "http://www.jusbrasil.com.br/topicos/26413205/direito-de-familia"
-	"Direito ", "http://www.jusbrasil.com.br/topicos/26413213/direito-do-consumidor"
-	"Direito ", "http://www.jusbrasil.com.br/topicos/26413215/direito-do-turismo"
-	"Direito ", "http://www.jusbrasil.com.br/topicos/26413216/direito-de-internet"
-	"Direito eleitoral", "http://www.jusbrasil.com.br/topicos/26413218/direito-eleitoral"
-	"Direito financeiro", "http://www.jusbrasil.com.br/topicos/26413222/direito-financeiro"
-	"Direito medico", "http://www.jusbrasil.com.br/topicos/26413226/direito-medico"
-	"Direito internacional", "http://www.jusbrasil.com.br/topicos/26413224/direito-internacional"
-	"Direito publico", "http://www.jusbrasil.com.br/topicos/26413234/direito-publico"
-	"Direitos humanos", "http://www.jusbrasil.com.br/topicos/26413243/direitos-humanos"
-	"Transito ", "http://www.jusbrasil.com.br/topicos/735233/transito"
+	"Direito militar": "http://www.jusbrasil.com.br/topicos/292125/direito-militar/artigos",
+	"Direito do trabalho": "http://www.jusbrasil.com.br/topicos/355654/direito-do-trabalho/artigos",
+	"Direito agrario": "http://www.jusbrasil.com.br/topicos/26413195/direito-agrario/artigos",
+	"Direito ambiental": "http://www.jusbrasil.com.br/topicos/26413196/direito-ambiental/artigos",
+	"Direito civil": "http://www.jusbrasil.com.br/topicos/26413200/direito-civil/artigos",
+	"Direito consitucional": "http://www.jusbrasil.com.br/topicos/26413203/direito-constitucional/artigos",
+	"Direito de energia": "http://www.jusbrasil.com.br/topicos/26413204/direito-de-energia/artigos",
+	"Direito de familia": "http://www.jusbrasil.com.br/topicos/26413205/direito-de-familia/artigos",
+	"Direito do consumidor": "http://www.jusbrasil.com.br/topicos/26413213/direito-do-consumidor/artigos",
+	"Direito de turismo": "http://www.jusbrasil.com.br/topicos/26413215/direito-do-turismo/artigos",
+	"Direito de internet": "http://www.jusbrasil.com.br/topicos/26413216/direito-de-internet/artigos",
+	"Direito eleitoral": "http://www.jusbrasil.com.br/topicos/26413218/direito-eleitoral/artigos",
+	"Direito financeiro": "http://www.jusbrasil.com.br/topicos/26413222/direito-financeiro/artigos",
+	"Direito medico": "http://www.jusbrasil.com.br/topicos/26413226/direito-medico/artigos",
+	"Direito internacional": "http://www.jusbrasil.com.br/topicos/26413224/direito-internacional/artigos",
+	"Direito publico": "http://www.jusbrasil.com.br/topicos/26413234/direito-publico/artigos",
+	"Direitos humanos": "http://www.jusbrasil.com.br/topicos/26413243/direitos-humanos/artigos",
+	"Transito": "http://www.jusbrasil.com.br/topicos/735233/transito/artigos"
 }
 
-final_links = {}
-for category in category_links:
-	final_links[category] = []
+class Crawler:
 
-class Visitor:
-
-	def __init__(self, links):
-		self.links = links
+	def __init__(self, base_links):
+		self.base_links = base_links
+		self.links = {}
 		self.browser = Browser()
+		self.semaphore = Semaphore()
+
+	def expand_page(self, page):
+		self.browser.visit(page)
+
+		for i in range(9):
+			try:
+				self.browser.find_by_css('.more').click()
+			except:
+				break
+			sleep(5)
+
+	def get_links_in_loaded_page(self):
+		article_links = self.browser.find_by_css('.feed-item-title')
+		
+		to_return = []
+		for el in article_links:
+			to_return.append(el['href'])
+
+		return to_return
+
+	def get_articles(self):
+		pass
+
+	def get_article_from_page(self, page):
+		soup = BeautifulSoup(page)
+		pass
+
+	def set_links(self, category, links):
+		self.semaphore.acquire()
+		self.links[category] = links
+		self.semaphore.release()
+
+	def generate_links(self):
+		output = file("links", "wt")
+		for category in self.base_links:
+
+			self.expand_page(self.base_links[category])
+			self.set_links(category, self.get_links_in_loaded_page())
+
+		#	output.write(category)
+		#	output.write("\n"+str(len(self.links[category]))+"\n")
+		#	for link in self.links[category]:
+		#		output.write(link)
+		#		output.write("\n")
+		#	print("Category "+ category +" printed!")
 
 	def run(self):
-		for link in self.links:
-			browser.visit(self.links[link])
+		self.generate_links()
+		
 
+crawler = Crawler(category_links)
+crawler.run()
 
+#browser = Browser()
+#browser.visit("http://www.jusbrasil.com.br/topicos/292125/direito-militar/noticias")
 
-browser = Browser()
-browser.visit("http://www.jusbrasil.com.br/topicos/292125/direito-militar/noticias")
-
-summary = browser.find_by_tag('summary')
-button = browser.find_by_css('.more')
-button.click()
-browser.quit()
+#summary = browser.find_by_tag('summary')
+#button = browser.find_by_css('.more')
+#button.click()
+#browser.quit()
