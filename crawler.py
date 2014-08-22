@@ -106,24 +106,6 @@ class Crawler:
 			print(category+" lauched")
 
 		t.join()
-		#	output.write(category)
-		#	output.write("\n"+str(len(self.links[category]))+"\n")
-		#	for link in self.links[category]:
-		#		output.write(link)
-		#		output.write("\n")
-		#	print("Category "+ category +" printed!")
-
 
 crawler = Crawler(category_links)
 crawler.run()
-#crawler.wait()
-#crawler.get_article_from_page(urllib.urlopen("http://joaovcastello.jusbrasil.com.br/artigos/133227251/breves-consideracoes-informativas-e-juridicas-do-seguro-dpvat?ref=home").read())
-
-
-#browser = Browser()
-#browser.visit("http://www.jusbrasil.com.br/topicos/292125/direito-militar/noticias")
-
-#summary = browser.find_by_tag('summary')
-#button = browser.find_by_css('.more')
-#button.click()
-#browser.quit()
